@@ -223,7 +223,7 @@ const App: React.FC = () => {
       {/* Header */}
       <div className="col-span-2 flex justify-between items-center px-4">
         <div className="flex items-center gap-6">
-          <img src="/src/assets/team-logo.png" alt="Operation Motorsport Racing" className="h-20 w-auto brightness-110 drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]" />
+          <img src="/team-logo.png" alt="Operation Motorsport Racing" className="h-20 w-auto brightness-110 drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]" />
           <div className="h-12 w-px bg-slate-800 mx-2 hidden md:block"></div>
           <div>
             <div className="flex items-center gap-2 text-slate-400 text-[10px] font-mono uppercase tracking-[0.2em]">
