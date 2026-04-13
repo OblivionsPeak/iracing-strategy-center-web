@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-obsidian: #0a0a0c;
+  --color-obsidian: #121417;
   --color-accent-cyan: #00f2ff;
   --color-accent-orange: #ff8c00;
   --color-accent-green: #39ff14;
@@ -11,7 +11,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
 
 :root {
-  --bg-deep: #0a0a0c;
+  --bg-deep: #121417;
   --bg-widget: rgba(20, 20, 25, 0.7);
   --accent-cyan: #00f2ff;
   --accent-orange: #ff8c00;
