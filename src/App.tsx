@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Activity, Fuel, Gauge, History, Map, Timer, Zap, Globe, Shield, Share2 } from 'lucide-react';
+import { Activity, Fuel, Gauge, History, Map, Timer, Globe, Shield, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface TelemetryData {
@@ -163,8 +163,8 @@ const App: React.FC = () => {
           <div className="h-12 w-px bg-slate-800 mx-2 hidden md:block"></div>
           <div>
             <div className="flex items-center gap-2 text-slate-400 text-[10px] font-mono uppercase tracking-[0.2em]">
-              {mode === 'remote' ? <Globe size={10} /> : <Shield size={10} />}
-              {mode === 'remote' ? `Live Telemetry Link • ${sessionId}` : 'Local Diagnostic Link'}
+              <Globe size={10} />
+              Live Telemetry Link • {teamCode || 'Active Session'}
             </div>
             <div className="text-cyan-400 text-xs font-bold uppercase tracking-widest mt-1">
               {data?.trackName || 'Awaiting Connection...'}
@@ -174,7 +174,7 @@ const App: React.FC = () => {
         <div className="flex gap-8 items-center">
           <button 
             onClick={() => {
-              const url = `${window.location.origin}${window.location.pathname}?session=${sessionId}&pin=${pin}&relay=${relayUrl}`;
+              const url = `${window.location.origin}${window.location.pathname}?code=${teamCode}`;
               navigator.clipboard.writeText(url);
               alert('Mission Control link copied to clipboard!');
             }}
