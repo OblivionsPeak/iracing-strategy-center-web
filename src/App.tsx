@@ -67,42 +67,28 @@ const App: React.FC = () => {
   const [error, setError] = useState('');
   
   // Gateway Inputs
-  const [mode, setMode] = useState<'local' | 'remote'>('local');
-  const [relayUrl, setRelayUrl] = useState('https://iracing-strategy-relay.onrender.com');
-  const [sessionId, setSessionId] = useState('');
-  const [pin, setPin] = useState('');
+  const [teamCode, setTeamCode] = useState('');
+  const relayUrl = 'https://iracing-strategy-relay.onrender.com';
 
   const socketRef = useRef<Socket | null>(null);
 
-  const connect = (targetMode = mode, targetRelay = relayUrl, targetId = sessionId, targetPin = pin) => {
+  const connect = (targetCode = teamCode) => {
     setError('');
     if (socketRef.current) socketRef.current.disconnect();
 
-    const targetUrl = targetMode === 'local' ? 'http://localhost:3001' : targetRelay;
-    if (!targetUrl) {
-       setError('Please enter a Relay URL');
-       return;
-    }
-
-    const socket = io(targetUrl);
+    const socket = io(relayUrl);
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      if (targetMode === 'remote') {
-        socket.emit('join-session', { sessionId: targetId, pin: targetPin });
-      } else {
-        setIsConnected(true);
-        setGatewayOpen(false);
-      }
+        socket.emit('join-session', { sessionId: targetCode, pin: '1234' });
     });
 
     socket.on('session-joined', () => {
        setIsConnected(true);
        setGatewayOpen(false);
-       setSessionId(targetId); // Ensure state is updated for the header
+       setSessionId(targetCode);
     });
     
-    // ... rest of socket listeners
     socket.on('telemetry', (payload: TelemetryData) => setData(payload));
     socket.on('error', (err: string) => { setError(err); socket.disconnect(); });
     socket.on('disconnect', () => setIsConnected(false));
@@ -110,16 +96,11 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const sId = params.get('session');
-    const sPin = params.get('pin');
-    const sRelay = params.get('relay') || 'https://iracing-strategy-relay.onrender.com';
+    const code = params.get('code') || params.get('session');
 
-    if (sId && sPin) {
-      setMode('remote');
-      setRelayUrl(sRelay);
-      setSessionId(sId);
-      setPin(sPin);
-      connect('remote', sRelay, sId, sPin);
+    if (code) {
+      setTeamCode(code);
+      connect(code);
     }
   }, []);
 
@@ -138,88 +119,35 @@ const App: React.FC = () => {
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="glass-panel max-w-md w-full p-8"
+          className="glass-panel max-w-sm w-full p-10 text-center"
         >
-          <div className="flex items-center gap-3 mb-8">
-            <Zap className="text-cyan-400" size={32} />
-            <h1 className="text-2xl font-bold">MISSION GATEWAY</h1>
+          <img src="/team-logo.png" alt="Logo" className="h-16 mx-auto mb-8 brightness-110" />
+          
+          <div className="mb-8">
+            <h1 className="text-xl font-bold tracking-[0.2em] mb-2 uppercase">Mission Control</h1>
+            <div className="text-[10px] text-slate-500 font-mono tracking-widest uppercase">Secured Team Gateway</div>
           </div>
 
-          <div className="flex gap-2 mb-6">
-            <button 
-              onClick={() => setMode('local')}
-              className={`flex-1 py-2 rounded-md transition-colors ${mode === 'local' ? 'bg-cyan-400 text-black font-bold' : 'bg-slate-800 text-slate-400'}`}
-            >
-              LOCAL
-            </button>
-            <button 
-              onClick={() => setMode('remote')}
-              className={`flex-1 py-2 rounded-md transition-colors ${mode === 'remote' ? 'bg-cyan-400 text-black font-bold' : 'bg-slate-800 text-slate-400'}`}
-            >
-              REMOTE
-            </button>
+          <div className="space-y-6 mb-8 text-left">
+            <div>
+              <div className="label text-[10px] mb-2">Team Access Code</div>
+              <input 
+                type="text" 
+                placeholder="e.g. OPM-RACING" 
+                value={teamCode}
+                onChange={(e) => setTeamCode(e.target.value.toUpperCase())}
+                className="w-full bg-slate-900 border border-slate-800 rounded-lg px-4 py-3 text-center text-lg focus:outline-none focus:border-cyan-400 font-mono tracking-widest"
+              />
+            </div>
           </div>
 
-          <AnimatePresence mode="wait">
-            {mode === 'local' ? (
-              <motion.div 
-                key="local"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="text-slate-400 text-sm mb-6"
-              >
-                Connecting to iRacing Strategy Bridge on this machine (Port 3001).
-              </motion.div>
-            ) : (
-              <motion.div 
-                key="remote"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="space-y-4 mb-6"
-              >
-                <div className="label text-[10px]">Relay Endpoint</div>
-                <input 
-                  type="text" 
-                  placeholder="https://..." 
-                  value={relayUrl}
-                  onChange={(e) => setRelayUrl(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded px-3 py-2 text-sm focus:outline-none focus:border-cyan-400 font-mono"
-                />
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <div className="label text-[10px]">Session</div>
-                    <input 
-                      type="text" 
-                      placeholder="ID" 
-                      value={sessionId}
-                      onChange={(e) => setSessionId(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded px-3 py-2 text-sm focus:outline-none focus:border-cyan-400 font-mono"
-                    />
-                  </div>
-                  <div>
-                    <div className="label text-[10px]">Security PIN</div>
-                    <input 
-                      type="password" 
-                      placeholder="PIN" 
-                      value={pin}
-                      onChange={(e) => setPin(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded px-3 py-2 text-sm focus:outline-none focus:border-cyan-400 font-mono"
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {error && <div className="text-red-400 text-xs mb-4 font-mono">{error}</div>}
+          {error && <div className="text-red-400 text-[10px] mb-4 font-mono uppercase tracking-tighter">{error}</div>}
 
           <button 
-            onClick={connect}
-            className="w-full py-3 bg-white text-black font-bold rounded-md hover:bg-cyan-400 transition-colors uppercase tracking-widest text-sm"
+            onClick={() => connect()}
+            className="w-full py-4 bg-white text-black font-black rounded-lg hover:bg-cyan-400 transition-all uppercase tracking-[0.3em] text-xs shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(34,211,238,0.3)]"
           >
-            Initiate Connection
+            Enter Mission
           </button>
         </motion.div>
       </div>
