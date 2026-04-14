@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Activity, Fuel, Gauge, History, Map, Timer, Zap, Globe, Shield } from 'lucide-react';
+import { Activity, Fuel, Gauge, History, Map, Timer, Zap, Globe, Shield, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface TelemetryData {
@@ -68,17 +68,17 @@ const App: React.FC = () => {
   
   // Gateway Inputs
   const [mode, setMode] = useState<'local' | 'remote'>('local');
-  const [relayUrl, setRelayUrl] = useState('');
+  const [relayUrl, setRelayUrl] = useState('https://iracing-strategy-relay.onrender.com');
   const [sessionId, setSessionId] = useState('');
   const [pin, setPin] = useState('');
 
   const socketRef = useRef<Socket | null>(null);
 
-  const connect = () => {
+  const connect = (targetMode = mode, targetRelay = relayUrl, targetId = sessionId, targetPin = pin) => {
     setError('');
     if (socketRef.current) socketRef.current.disconnect();
 
-    const targetUrl = mode === 'local' ? 'http://localhost:3001' : relayUrl;
+    const targetUrl = targetMode === 'local' ? 'http://localhost:3001' : targetRelay;
     if (!targetUrl) {
        setError('Please enter a Relay URL');
        return;
@@ -88,8 +88,8 @@ const App: React.FC = () => {
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      if (mode === 'remote') {
-        socket.emit('join-session', { sessionId, pin });
+      if (targetMode === 'remote') {
+        socket.emit('join-session', { sessionId: targetId, pin: targetPin });
       } else {
         setIsConnected(true);
         setGatewayOpen(false);
@@ -99,21 +99,29 @@ const App: React.FC = () => {
     socket.on('session-joined', () => {
        setIsConnected(true);
        setGatewayOpen(false);
+       setSessionId(targetId); // Ensure state is updated for the header
     });
-
-    socket.on('telemetry', (payload: TelemetryData) => {
-      setData(payload);
-    });
-
-    socket.on('error', (err: string) => {
-      setError(err);
-      socket.disconnect();
-    });
-
-    socket.on('disconnect', () => {
-      setIsConnected(false);
-    });
+    
+    // ... rest of socket listeners
+    socket.on('telemetry', (payload: TelemetryData) => setData(payload));
+    socket.on('error', (err: string) => { setError(err); socket.disconnect(); });
+    socket.on('disconnect', () => setIsConnected(false));
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sId = params.get('session');
+    const sPin = params.get('pin');
+    const sRelay = params.get('relay') || 'https://iracing-strategy-relay.onrender.com';
+
+    if (sId && sPin) {
+      setMode('remote');
+      setRelayUrl(sRelay);
+      setSessionId(sId);
+      setPin(sPin);
+      connect('remote', sRelay, sId, sPin);
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -235,7 +243,20 @@ const App: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="flex gap-8">
+        <div className="flex gap-8 items-center">
+          <button 
+            onClick={() => {
+              const url = `${window.location.origin}${window.location.pathname}?session=${sessionId}&pin=${pin}&relay=${relayUrl}`;
+              navigator.clipboard.writeText(url);
+              alert('Mission Control link copied to clipboard!');
+            }}
+            className="flex flex-col items-center gap-1 group"
+            title="Copy Instant-Access Link for Team"
+          >
+            <div className="label group-hover:text-cyan-400 transition-colors">Share Mission</div>
+            <Share2 size={18} className="text-slate-500 group-hover:text-cyan-400 transition-colors" />
+          </button>
+          <div className="h-8 w-px bg-slate-800 mx-2"></div>
           <div className="text-right">
              <div className="label">Session Status</div>
              <div className="text-glow-cyan text-xs font-bold uppercase">{isConnected ? 'Active' : 'Offline'}</div>
