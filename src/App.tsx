@@ -86,7 +86,6 @@ const App: React.FC = () => {
     socket.on('session-joined', () => {
        setIsConnected(true);
        setGatewayOpen(false);
-       setSessionId(targetCode);
     });
     
     socket.on('telemetry', (payload: TelemetryData) => setData(payload));
