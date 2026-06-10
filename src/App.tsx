@@ -163,7 +163,7 @@ const App: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 text-slate-400 text-[10px] font-mono uppercase tracking-[0.2em]">
               <Globe size={10} />
-              Live Telemetry Link • {teamCode || 'Active Session'}
+              Live Telemetry Link &mdash; {teamCode || 'Active Session'}
             </div>
             <div className="text-cyan-400 text-xs font-bold uppercase tracking-widest mt-1">
               {data?.trackName || 'Awaiting Connection...'}
@@ -264,11 +264,11 @@ const App: React.FC = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div className="text-xs text-slate-500">AIR TEMP</div>
-              <div className="font-mono text-lg">{data?.airTemp.toFixed(1) || 0}°C</div>
+              <div className="font-mono text-lg">{data?.airTemp.toFixed(1) || 0}&deg;C</div>
             </div>
             <div>
               <div className="text-xs text-slate-500">TRACK TEMP</div>
-              <div className="font-mono text-lg">{data?.trackTemp.toFixed(1) || 0}°C</div>
+              <div className="font-mono text-lg">{data?.trackTemp.toFixed(1) || 0}&deg;C</div>
             </div>
           </div>
         </div>
